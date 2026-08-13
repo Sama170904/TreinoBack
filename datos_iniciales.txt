@@ -1,0 +1,71 @@
+-- ==============================================================================
+-- TREINO - SCRIPT DE DATOS INICIALES (INSERTS DE PRUEBA Y LIMPIEZA)
+-- ==============================================================================
+-- 
+-- USUARIOS Y CREDENCIALES DE ACCESO:
+-- ------------------------------------------------------------------------------
+-- 1. ADMINISTRADOR:
+--    - Email: admin@treino.com
+--    - Contraseña: admin123
+--    - Rol: ADMINISTRADOR
+--
+-- 2. PROFESOR:
+--    - Email: profesor@treino.com
+--    - Contraseña: profe123
+--    - Rol: PROFESOR
+--
+-- 3. CLIENTE:
+--    - Email: cliente@treino.com
+--    - Contraseña: cliente123
+--    - Rol: CLIENTE
+-- ==============================================================================
+
+-- 1. LIMPIEZA INICIAL DE TABLAS (DELETES CON CASCADE O EN ORDEN DE DEPENDENCIA)
+TRUNCATE TABLE tbl_historial_credito, tbl_reserva, tbl_paquete_credito, tbl_clase, tbl_token, tbl_usuario, tbl_sede RESTART IDENTITY CASCADE;
+
+-- 2. INSERTS DE USUARIOS
+-- Hash BCrypt para 'admin123': $2a$10$wchA3o6FvJXnW2dXC9qj6evXpD1zCyev1tKOB8DtMkByozgL75maC
+-- Hash BCrypt para 'profe123': $2a$10$RkfYvvKp3RctRgqEQcLPhOnQ3sLaI5D3R7V3k40Ihhd93nzNCor9q
+-- Hash BCrypt para 'cliente123': $2a$10$tyB4DkQrUsLUkJ.5yrArsu63b1oXrmAwxcarmyUNXnxX9FS7KKQjC
+
+INSERT INTO tbl_usuario (user_id, nombre, apellido, email, password, rol, estado) VALUES 
+(1, 'Carlos', 'Administrador', 'admin@treino.com', '$2a$10$wchA3o6FvJXnW2dXC9qj6evXpD1zCyev1tKOB8DtMkByozgL75maC', 'ADMINISTRADOR', 'ACTIVO'),
+(2, 'Laura', 'Entrenadora', 'profesor@treino.com', '$2a$10$RkfYvvKp3RctRgqEQcLPhOnQ3sLaI5D3R7V3k40Ihhd93nzNCor9q', 'PROFESOR', 'ACTIVO'),
+(3, 'Mateo', 'Cliente', 'cliente@treino.com', '$2a$10$tyB4DkQrUsLUkJ.5yrArsu63b1oXrmAwxcarmyUNXnxX9FS7KKQjC', 'CLIENTE', 'ACTIVO');
+
+-- Ajustar la secuencia de IDs de usuarios
+SELECT setval('tbl_usuario_user_id_seq', (SELECT MAX(user_id) FROM tbl_usuario));
+
+-- 3. INSERTS DE SEDES
+INSERT INTO tbl_sede (sede_id, nombre, direccion, capacidad_maxima, estado) VALUES 
+(1, 'Sede Principal Polanco', 'Av. Presidente Masaryk 123, Polanco, CDMX', 25, 'ACTIVO'),
+(2, 'Sede Condesa Studio', 'Calle Amsterdam 45, Condesa, CDMX', 15, 'ACTIVO');
+
+SELECT setval('tbl_sede_sede_id_seq', (SELECT MAX(sede_id) FROM tbl_sede));
+
+-- 4. INSERTS DE CLASES
+INSERT INTO tbl_clase (clase_id, profesor_id, sede_id, disciplina, descripcion, fecha_hora_inicio, fecha_hora_fin, cupo_maximo, cupos_reservados, estado) VALUES 
+(1, 2, 1, 'Pilates Reformer', 'Sesión intensiva de Pilates Reformer para fuerza central y movilidad.', '2026-08-11 08:00:00', '2026-08-11 09:00:00', 10, 1, 'ACTIVO'),
+(2, 2, 1, 'Barre Fitness', 'Combinación de ballet, pilates y entrenamiento funcional.', '2026-08-11 10:00:00', '2026-08-11 11:00:00', 12, 0, 'ACTIVO'),
+(3, 2, 2, 'Yoga Vinyasa Flow', 'Fluidez de respiración y movimiento para relajación y fuerza.', '2026-08-12 18:00:00', '2026-08-12 19:00:00', 15, 0, 'ACTIVO');
+
+SELECT setval('tbl_clase_clase_id_seq', (SELECT MAX(clase_id) FROM tbl_clase));
+
+-- 5. INSERTS DE PAQUETES DE CRÉDITO PARA EL CLIENTE
+INSERT INTO tbl_paquete_credito (credito_id, cliente_id, creditos_totales, creditos_disponibles, vigencia_tipo, fecha_asignacion, fecha_expiracion, estado) VALUES 
+(1, 3, 10, 9, 'MENSUAL', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '30 days', 'ACTIVO');
+
+SELECT setval('tbl_paquete_credito_credito_id_seq', (SELECT MAX(credito_id) FROM tbl_paquete_credito));
+
+-- 6. INSERTS DE RESERVAS
+INSERT INTO tbl_reserva (reserva_id, cliente_id, clase_id, fecha_reserva, estado_reserva, estado_asistencia, estado) VALUES 
+(1, 3, 1, CURRENT_TIMESTAMP, 'CONFIRMADA', 'PENDIENTE', 'ACTIVO');
+
+SELECT setval('tbl_reserva_reserva_id_seq', (SELECT MAX(reserva_id) FROM tbl_reserva));
+
+-- 7. INSERTS DE HISTORIAL DE CRÉDITOS
+INSERT INTO tbl_historial_credito (historial_id, cliente_id, reserva_id, cantidad, tipo_movimiento, descripcion, fecha_movimiento) VALUES 
+(1, 3, NULL, 10, 'ASIGNACION', 'Asignación inicial de paquete de 10 créditos mensuales por Admin', CURRENT_TIMESTAMP),
+(2, 3, 1, -1, 'CONSUMO_RESERVA', 'Reserva confirmada para la clase Pilates Reformer', CURRENT_TIMESTAMP);
+
+SELECT setval('tbl_historial_credito_historial_id_seq', (SELECT MAX(historial_id) FROM tbl_historial_credito));
