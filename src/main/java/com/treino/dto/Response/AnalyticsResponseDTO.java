@@ -20,6 +20,7 @@ public class AnalyticsResponseDTO {
 
     private List<HoraOcupacionDTO> ocupacionPorHorario;
     private List<ProfesorDesempenoDTO> desempenoProfesores;
+    private List<AlumnoRiesgoDTO> alumnosEnRiesgo;
 
     @Data
     @Builder
@@ -45,5 +46,22 @@ public class AnalyticsResponseDTO {
         private double porcentajeNoShow;
         private double porcentajeAsistencia;
         private int alumnosUnicosAtendidos;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AlumnoRiesgoDTO {
+        private Long clienteId;
+        private String nombreCliente;
+        private String email;
+        private String telefono;
+        private long diasSinEntrenar;
+        private String fechaUltimaClase;
+        private String disciplinaUltimaClase;
+        private int creditosDisponibles;
+        private String nivelRiesgo; // "MEDIO" (10-18 días), "ALTO" (19-45 días)
+        private String enlaceWhatsAppDirecto;
     }
 }

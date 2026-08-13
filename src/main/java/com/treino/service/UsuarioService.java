@@ -27,6 +27,7 @@ public class UsuarioService {
                 .nombre(dto.getNombre())
                 .apellido(dto.getApellido())
                 .email(dto.getEmail())
+                .telefono(dto.getTelefono())
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .rol(Usuario.Rol.valueOf(dto.getRol()))
                 .estado(Usuario.Estado.ACTIVO)
@@ -54,10 +55,15 @@ public class UsuarioService {
         
         usuario.setNombre(dto.getNombre());
         usuario.setApellido(dto.getApellido());
+        if (dto.getTelefono() != null) {
+            usuario.setTelefono(dto.getTelefono());
+        }
         if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
             usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
-        usuario.setRol(Usuario.Rol.valueOf(dto.getRol()));
+        if (dto.getRol() != null && !dto.getRol().isBlank()) {
+            usuario.setRol(Usuario.Rol.valueOf(dto.getRol()));
+        }
         usuario = usuarioRepository.save(usuario);
         return mapToResponse(usuario);
     }
@@ -76,6 +82,7 @@ public class UsuarioService {
                 .nombre(u.getNombre())
                 .apellido(u.getApellido())
                 .email(u.getEmail())
+                .telefono(u.getTelefono())
                 .rol(u.getRol().name())
                 .estado(u.getEstado() != null ? u.getEstado().name() : "ACTIVO")
                 .build();

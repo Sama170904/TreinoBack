@@ -23,6 +23,8 @@ public class UsuarioUpdateDTO {
     @NotBlank(message = "El apellido es obligatorio")
     private String apellido;
 
+    private String telefono;
+
     private String password;
 
     private String rol;

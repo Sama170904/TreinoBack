@@ -22,6 +22,8 @@ public class UsuarioCreateDTO {
     @Email(message = "El email debe ser válido")
     private String email;
 
+    private String telefono;
+
     @NotBlank(message = "La contraseña es obligatoria")
     private String password;
 

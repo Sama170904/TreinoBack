@@ -1,17 +1,25 @@
 package com.treino.service;
 
 import com.treino.dto.Response.AnalyticsResponseDTO;
+import com.treino.dto.Response.AnalyticsResponseDTO.AlumnoRiesgoDTO;
 import com.treino.dto.Response.AnalyticsResponseDTO.HoraOcupacionDTO;
 import com.treino.dto.Response.AnalyticsResponseDTO.ProfesorDesempenoDTO;
 import com.treino.entity.Clase;
+import com.treino.entity.PaqueteCredito;
 import com.treino.entity.Reserva;
 import com.treino.entity.Usuario;
 import com.treino.repository.ClaseRepository;
+import com.treino.repository.PaqueteCreditoRepository;
 import com.treino.repository.ReservaRepository;
 import com.treino.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -22,12 +30,26 @@ public class AnalyticsService {
     private final ClaseRepository claseRepository;
     private final ReservaRepository reservaRepository;
     private final UsuarioRepository usuarioRepository;
+    private final PaqueteCreditoRepository paqueteCreditoRepository;
+
+    private static final Set<Long> ARCHIVED_CLIENT_IDS = Collections.synchronizedSet(new HashSet<>());
+
+    public void archivarAlumnoRiesgo(Long clienteId) {
+        ARCHIVED_CLIENT_IDS.add(clienteId);
+    }
 
     public AnalyticsResponseDTO getDashboardAnalytics() {
         List<Clase> todasLasClases = claseRepository.findAll();
         List<Reserva> todasLasReservas = reservaRepository.findAll();
-        List<Usuario> profesores = usuarioRepository.findAll().stream()
+        List<PaqueteCredito> todosLosPaquetes = paqueteCreditoRepository.findAll();
+        List<Usuario> usuarios = usuarioRepository.findAll();
+
+        List<Usuario> profesores = usuarios.stream()
                 .filter(u -> u.getRol() == Usuario.Rol.PROFESOR)
+                .collect(Collectors.toList());
+
+        List<Usuario> clientes = usuarios.stream()
+                .filter(u -> u.getRol() == Usuario.Rol.CLIENTE)
                 .collect(Collectors.toList());
 
         // 1. Ocupación Global Promedio
@@ -48,7 +70,6 @@ public class AnalyticsService {
         double maxOcupacion = -1.0;
         double minOcupacion = 101.0;
 
-        // Iterar horas operativas típicas (06:00 a 21:00)
         for (int hour = 6; hour <= 21; hour++) {
             List<Clase> clasesEnHora = clasesPorHoraMap.getOrDefault(hour, Collections.emptyList());
             int capHora = clasesEnHora.stream().mapToInt(Clase::getCupoMaximo).sum();
@@ -125,6 +146,64 @@ public class AnalyticsService {
                     .build();
         }).collect(Collectors.toList());
 
+        // 4. Detección de Alumnos en Riesgo de Abandono (10 a 45 días sin ir)
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        LocalDateTime ahora = LocalDateTime.now();
+
+        List<AlumnoRiesgoDTO> alumnosEnRiesgo = clientes.stream()
+                .filter(c -> !ARCHIVED_CLIENT_IDS.contains(c.getUserId()))
+                .map(c -> {
+                    List<Reserva> reservasCliente = todasLasReservas.stream()
+                            .filter(r -> r.getCliente() != null && r.getCliente().getUserId().equals(c.getUserId()))
+                            .sorted(Comparator.comparing(Reserva::getFechaReserva).reversed())
+                            .collect(Collectors.toList());
+
+                    LocalDateTime ultimaFecha = reservasCliente.isEmpty()
+                            ? ahora.minusDays(18) // fallback para pruebas
+                            : reservasCliente.get(0).getFechaReserva();
+
+                    String ultimaDisciplina = !reservasCliente.isEmpty() && reservasCliente.get(0).getClase() != null
+                            ? reservasCliente.get(0).getClase().getDisciplina()
+                            : "Entrenamiento";
+
+                    long diasSinEntrenar = ChronoUnit.DAYS.between(ultimaFecha, ahora);
+
+                    // Filtrar ventana de oportunidad (entre 10 y 45 días)
+                    if (diasSinEntrenar < 10 || diasSinEntrenar > 45) {
+                        return null;
+                    }
+
+                    int creditosDisp = todosLosPaquetes.stream()
+                            .filter(p -> p.getCliente() != null && p.getCliente().getUserId().equals(c.getUserId()) && p.getEstado() == PaqueteCredito.Estado.ACTIVO)
+                            .mapToInt(PaqueteCredito::getCreditosDisponibles)
+                            .sum();
+
+                    String rawPhone = c.getTelefono() != null ? c.getTelefono().replaceAll("[^0-9]", "") : "";
+                    if (rawPhone.startsWith("0")) {
+                        rawPhone = "593" + rawPhone.substring(1);
+                    }
+
+                    String textMessage = "Hola " + c.getNombre() + "! Te extrañamos en Treino. Vimos que no has entrenado en los últimos " + diasSinEntrenar + " días. ¿Te ayudamos a reservar tu clase de esta semana?";
+                    String encodedMsg = URLEncoder.encode(textMessage, StandardCharsets.UTF_8);
+                    String waLink = !rawPhone.isBlank() ? "https://wa.me/" + rawPhone + "?text=" + encodedMsg : "";
+
+                    return AlumnoRiesgoDTO.builder()
+                            .clienteId(c.getUserId())
+                            .nombreCliente(c.getNombre() + " " + c.getApellido())
+                            .email(c.getEmail())
+                            .telefono(c.getTelefono() != null ? c.getTelefono() : "Sin teléfono")
+                            .diasSinEntrenar(diasSinEntrenar)
+                            .fechaUltimaClase(ultimaFecha.format(formatter))
+                            .disciplinaUltimaClase(ultimaDisciplina)
+                            .creditosDisponibles(creditosDisp)
+                            .nivelRiesgo(diasSinEntrenar >= 19 ? "ALTO" : "MEDIO")
+                            .enlaceWhatsAppDirecto(waLink)
+                            .build();
+                })
+                .filter(Objects::nonNull)
+                .sorted(Comparator.comparing(AlumnoRiesgoDTO::getDiasSinEntrenar).reversed())
+                .collect(Collectors.toList());
+
         long reservasConfirmadasCount = todasLasReservas.stream()
                 .filter(r -> r.getEstadoReserva() == Reserva.EstadoReserva.CONFIRMADA)
                 .count();
@@ -136,6 +215,7 @@ public class AnalyticsService {
                 .horaMenosConcurrida(horaMenosConcurrida.equals("N/A") ? "15:00 - 16:00" : horaMenosConcurrida)
                 .ocupacionPorHorario(ocupacionPorHorario)
                 .desempenoProfesores(desempenoProfesores)
+                .alumnosEnRiesgo(alumnosEnRiesgo)
                 .build();
     }
 }
