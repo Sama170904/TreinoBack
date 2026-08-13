@@ -29,8 +29,7 @@ public class AnalyticsResponseDTO {
         private String horaEtiqueta; // e.g. "15:00 - 16:00"
         private int totalClases;
         private double porcentajeOcupacion;
-        private String estadoDemanda; // "PICO", "NORMAL", "BAJA"
-        private String recomendacionEstrategica;
+        private String estadoDemanda; // "ALTA", "MEDIA", "BAJA"
     }
 
     @Data

@@ -12,7 +12,6 @@ import com.treino.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -57,21 +56,17 @@ public class AnalyticsService {
 
             double pctOcupacion = capHora > 0
                     ? Math.round(((double) resHora / capHora) * 1000.0) / 10.0
-                    : (clasesEnHora.isEmpty() ? 0.0 : 0.0);
+                    : 0.0;
 
             String horaEtiqueta = String.format("%02d:00 - %02d:00", hour, hour + 1);
             String estadoDemanda;
-            String recomendacion;
 
             if (pctOcupacion >= 70.0) {
-                estadoDemanda = "PICO";
-                recomendacion = "🔥 Alta demanda. Mantener precio regular o aumentar cupos por profesor.";
+                estadoDemanda = "ALTA";
             } else if (pctOcupacion >= 40.0) {
-                estadoDemanda = "NORMAL";
-                recomendacion = "⚡ Ocupación estable. Monitorear ritmo de reservas.";
+                estadoDemanda = "MEDIA";
             } else {
                 estadoDemanda = "BAJA";
-                recomendacion = "❄️ Hora muerta. Sugerido: Lanza PromoCoins (1 crédito = 2 clases en este horario).";
             }
 
             if (!clasesEnHora.isEmpty()) {
@@ -90,7 +85,6 @@ public class AnalyticsService {
                     .totalClases(clasesEnHora.size())
                     .porcentajeOcupacion(pctOcupacion)
                     .estadoDemanda(estadoDemanda)
-                    .recomendacionEstrategica(recomendacion)
                     .build());
         }
 
