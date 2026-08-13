@@ -5,6 +5,7 @@ C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\trein
 C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\treino\config\CustomAuthenticationEntryPoint.java
 C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\treino\config\SchedulingConfig.java
 C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\treino\config\SecurityConfig.java
+C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\treino\controller\AnalyticsController.java
 C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\treino\controller\AuthController.java
 C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\treino\controller\ClaseController.java
 C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\treino\controller\CreditoController.java
@@ -18,6 +19,7 @@ C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\trein
 C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\treino\dto\Create\ReservaCreateDTO.java
 C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\treino\dto\Create\SedeCreateDTO.java
 C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\treino\dto\Create\UsuarioCreateDTO.java
+C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\treino\dto\Response\AnalyticsResponseDTO.java
 C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\treino\dto\Response\AuthResponseDTO.java
 C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\treino\dto\Response\ClaseResponseDTO.java
 C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\treino\dto\Response\CreditoResponseDTO.java
@@ -49,6 +51,7 @@ C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\trein
 C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\treino\repository\SedeRepository.java
 C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\treino\repository\TokenRepository.java
 C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\treino\repository\UsuarioRepository.java
+C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\treino\service\AnalyticsService.java
 C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\treino\service\AuthService.java
 C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\treino\service\CheckInService.java
 C:\Users\rsama\OneDrive\Documentos\visual\Treino\backend\src\main\java\com\treino\service\ClaseService.java
