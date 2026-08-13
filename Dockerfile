@@ -11,8 +11,7 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
-# Render & Cloud providers pass $PORT dynamically
 ENV PORT=8081
 EXPOSE 8081
 
-ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT} -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT} -Dspring.datasource.url=${SPRING_DATASOURCE_URL} -Dspring.datasource.username=${SPRING_DATASOURCE_USERNAME} -Dspring.datasource.password=${SPRING_DATASOURCE_PASSWORD} -Djwt.secret-key=${JWT_SECRET_KEY} -jar app.jar"]
