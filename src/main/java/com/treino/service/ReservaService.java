@@ -11,6 +11,7 @@ import com.treino.entity.Clase;
 import com.treino.entity.PaqueteCredito;
 import com.treino.entity.Reserva;
 import com.treino.entity.HistorialCredito;
+import com.treino.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,9 +28,14 @@ public class ReservaService {
     private final PaqueteCreditoRepository creditoRepository;
     private final ReservaRepository reservaRepository;
     private final HistorialCreditoRepository historialRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final NotificacionWhatsAppService notificacionWhatsAppService;
 
     @Transactional
     public ReservaResponseDTO crearReserva(Long clienteId, Long claseId) {
+        Usuario cliente = usuarioRepository.findById(clienteId)
+            .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
+
         // 1. Bloqueo Pesimista en BD
         Clase clase = claseRepository.findByIdForUpdate(claseId)
             .orElseThrow(() -> new ResourceNotFoundException("La clase no existe"));
@@ -66,7 +72,7 @@ public class ReservaService {
 
         // 6. Crear Registro de Reserva
         Reserva reserva = Reserva.builder()
-            .cliente(new Usuario(clienteId))
+            .cliente(cliente)
             .clase(clase)
             .fechaReserva(LocalDateTime.now())
             .estadoReserva(Reserva.EstadoReserva.CONFIRMADA)
@@ -76,7 +82,7 @@ public class ReservaService {
 
         // 7. Registrar Historial
         HistorialCredito historial = HistorialCredito.builder()
-            .cliente(new Usuario(clienteId))
+            .cliente(cliente)
             .reserva(reserva)
             .cantidad(-1)
             .tipoMovimiento(HistorialCredito.TipoMovimiento.CONSUMO_RESERVA)
@@ -84,6 +90,9 @@ public class ReservaService {
             .fechaMovimiento(LocalDateTime.now())
             .build();
         historialRepository.save(historial);
+
+        // 8. Notificación Automática WhatsApp
+        notificacionWhatsAppService.notificarConfirmacionReserva(reserva);
 
         return mapToResponse(reserva);
     }
@@ -133,6 +142,9 @@ public class ReservaService {
         clase.setCuposReservados(clase.getCuposReservados() - 1);
         claseRepository.save(clase);
         reservaRepository.save(reserva);
+
+        // Notificación Automática WhatsApp
+        notificacionWhatsAppService.notificarCancelacionReserva(reserva);
 
         return mapToResponse(reserva);
     }
