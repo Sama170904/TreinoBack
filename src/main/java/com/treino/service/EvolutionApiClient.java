@@ -96,6 +96,11 @@ public class EvolutionApiClient {
                 Map body = response.getBody();
                 String base64 = (String) body.get("base64");
                 String code = (String) body.get("code");
+                if (body.get("qrcode") instanceof Map) {
+                    Map qrcodeMap = (Map) body.get("qrcode");
+                    if (base64 == null) base64 = (String) qrcodeMap.get("base64");
+                    if (code == null) code = (String) qrcodeMap.get("code");
+                }
 
                 return WhatsAppStatusDTO.builder()
                     .instanceName(instanceName)
