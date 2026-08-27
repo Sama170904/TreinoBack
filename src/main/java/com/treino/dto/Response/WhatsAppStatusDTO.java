@@ -14,5 +14,6 @@ public class WhatsAppStatusDTO {
     private String instanceName;
     private String phone;
     private String qrcodeBase64;
+    private String pairingCode;
     private String error;
 }

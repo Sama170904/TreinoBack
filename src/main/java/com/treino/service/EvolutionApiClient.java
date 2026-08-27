@@ -81,12 +81,24 @@ public class EvolutionApiClient {
             .build();
     }
 
-    public WhatsAppStatusDTO conectarInstancia() {
+    public WhatsAppStatusDTO conectarInstancia(String telefono) {
         try {
             // Intentar crear instancia si no existe
             crearInstanciaSiNoExiste();
 
+            // Si se solicita conectar de nuevo, asegurar un socket fresco
+            try {
+                String logoutEndpoint = apiUrl + "/instance/logout/" + instanceName;
+                HttpHeaders logoutHeaders = new HttpHeaders();
+                logoutHeaders.set("apikey", apiKey);
+                restTemplate.exchange(logoutEndpoint, HttpMethod.DELETE, new HttpEntity<>(logoutHeaders), String.class);
+            } catch (Exception ignore) {}
+
             String endpoint = apiUrl + "/instance/connect/" + instanceName;
+            if (telefono != null && !telefono.isBlank()) {
+                endpoint += "?number=" + telefono;
+            }
+
             HttpHeaders headers = new HttpHeaders();
             headers.set("apikey", apiKey);
             HttpEntity<Void> request = new HttpEntity<>(headers);
@@ -96,16 +108,19 @@ public class EvolutionApiClient {
                 Map body = response.getBody();
                 String base64 = (String) body.get("base64");
                 String code = (String) body.get("code");
+                String pairingCode = (String) body.get("pairingCode");
                 if (body.get("qrcode") instanceof Map) {
                     Map qrcodeMap = (Map) body.get("qrcode");
                     if (base64 == null) base64 = (String) qrcodeMap.get("base64");
                     if (code == null) code = (String) qrcodeMap.get("code");
+                    if (pairingCode == null) pairingCode = (String) qrcodeMap.get("pairingCode");
                 }
 
                 return WhatsAppStatusDTO.builder()
                     .instanceName(instanceName)
                     .state("connecting")
                     .qrcodeBase64(base64 != null ? base64 : code)
+                    .pairingCode(pairingCode)
                     .build();
             }
         } catch (Exception e) {
@@ -115,7 +130,7 @@ public class EvolutionApiClient {
         return WhatsAppStatusDTO.builder()
             .instanceName(instanceName)
             .state("DISCONNECTED")
-            .error("No se pudo generar el código QR de vinculación")
+            .error("No se pudo generar la vinculación con Evolution API")
             .build();
     }
 

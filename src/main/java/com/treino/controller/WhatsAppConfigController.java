@@ -42,8 +42,12 @@ public class WhatsAppConfigController {
     }
 
     @PostMapping("/conectar")
-    public WhatsAppStatusDTO conectarBot() {
-        return apiClient.conectarInstancia();
+    public WhatsAppStatusDTO conectarBot(@RequestParam(required = false) String telefono) {
+        String phoneFormatted = null;
+        if (telefono != null && !telefono.isBlank()) {
+            phoneFormatted = notificacionService.normalizarTelefono(telefono);
+        }
+        return apiClient.conectarInstancia(phoneFormatted);
     }
 
     @PostMapping("/desconectar")
